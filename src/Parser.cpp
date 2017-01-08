@@ -1,7 +1,6 @@
 #include "Parser.h"
 #include "lconfig.h"
 #include "Function.h"
-#include <iostream>
 
 #define CHK_ASSERT(f, msg) if (!f) return std::make_pair(false, msg);
 

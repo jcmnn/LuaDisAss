@@ -1,6 +1,5 @@
 #include "Assembler.h"
 
-#include <iostream>
 #include <cstring>
 #include <limits>
 #include "util.h"
@@ -682,15 +681,11 @@ inline std::pair<bool, std::string> Assembler::parseCode(const char *line, size_
 	unsigned char count = opcount[opcode];
 	const OpInfo *info = opinfo[opcode];
 
-	std::cout << "parsing opcode " << opcodestr << std::endl;
-
 	for (int i = 0; i < count; i++) {
 		Operand op;
 		if ((bend = parseOperand(op, bend, end, info[i].limit)) == nullptr) {
 			return std::make_pair(false, "invalid operand(s)");
 		}
-
-		std::cout << "op " << i << " value: " << op.value() << std::endl;
 
 		switch (info[i].position) {
 			case OPP_A:
