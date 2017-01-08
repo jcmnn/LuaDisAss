@@ -12,7 +12,10 @@ public:
 
 	std::pair<bool, std::string> parse(std::string &out);
 	inline std::string label() {
-		return std::string("subroutine_") + std::to_string(labels_++);
+		if (labels_++ == 0) {
+			return "main";
+		}
+		return std::string("subroutine_") + std::to_string(labels_);
 	}
 
 private:

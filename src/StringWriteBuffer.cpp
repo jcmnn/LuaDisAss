@@ -1,5 +1,7 @@
 #include "StringWriteBuffer.h"
 
+#include <iostream>
+
 StringWriteBuffer::StringWriteBuffer(std::string &buffer) : buffer_(buffer) {
 
 }

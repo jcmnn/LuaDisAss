@@ -46,7 +46,7 @@ std::pair<bool, std::string> Parser::parse(std::string &out) {
 		return res;
 	}
 
-	out = std::move(func.disas());
+	out = std::string(".upvalues ") + std::to_string(numUpvalues) + "\n\n" + func.disas();
 
 	return res;
 }

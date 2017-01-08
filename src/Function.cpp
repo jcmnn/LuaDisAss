@@ -234,6 +234,12 @@ std::pair<bool, std::string> Function::loadFunction() {
 	}
 	disas_ << ".end_const\n\n\n";
 
+	disas_ << ".begin_upvalue\n";
+	for (auto it = upvalues_.begin(); it != upvalues_.end(); it++) {
+		disas_ << "   " << (int)it->instack << " " << (int)it->idx << "\n";
+	}
+	disas_ << ".end_upvalue\n\n\n";
+
 	disas_ << ".begin_code\n";
 	disas_ << parser.disas();
 	disas_ << ".end_code\n\n\n";

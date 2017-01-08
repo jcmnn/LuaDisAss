@@ -41,6 +41,7 @@ typedef unsigned int Instruction;
 #define LUA_TNUMFLT   (LUA_TNUMBER | (0 << 4))  /* float numbers */
 #define LUA_TNUMINT   (LUA_TNUMBER | (1 << 4))  /* integer numbers */
 
+#include "util.h"
 
 
 class TValue {
@@ -63,7 +64,7 @@ public:
 	TString(std::string &&string) : TValue(LUA_TSTRING), string_(std::forward<std::string>(string)) {};
 
 	inline std::string string() {return string_; };
-	inline std::string str() override {return std::string("\"") + string_ + std::string("\""); };
+	inline std::string str() override {return std::string("\"") + Util::escape(string_) + std::string("\""); };
 
 	inline bool operator==(TValue &v) override {
 		return v.type() == LUA_TSTRING && reinterpret_cast<TString*>(&v)->string() == string_;

@@ -40,6 +40,8 @@ enum OpMode {iABC, iABx, iAsBx, iAx};  /* basic instruction format */
 #define MAXARG_sBx        (MAXARG_Bx>>1)         /* 'sBx' is signed */
 #define MAXARG_Ax	((1<<SIZE_Ax)-1)
 
+#define MAXARG_C ((1<<SIZE_C)-1)
+
 
 /*
 ** the following macros help to manipulate instructions

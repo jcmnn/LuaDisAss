@@ -15,6 +15,48 @@ namespace Util {
 	static inline void lower(std::string &s) {
 		std::transform(s.begin(), s.end(), s.begin(), std::ptr_fun<int, int>(std::tolower));
 	}
+
+	static inline std::string escape(const std::string &string) {
+		std::string s;
+		for (char c : string) {
+			switch (c) {
+				case '\a':
+					s += "\\a";
+					break;
+				case '\b':
+					s += "\\b";
+					break;
+				case '\f':
+					s += "\\f";
+					break;
+				case '\n':
+					s += "\\n";
+					break;
+				case '\r':
+					s += "\\r";
+					break;
+				case '\t':
+					s += "\\t";
+					break;
+				case '\v':
+					s += "\\v";
+					break;
+				case '\\':
+					s += "\\\\";
+					break;
+				case '"':
+					s += "\\\"";
+					break;
+				case '\'':
+					s += "\\'";
+					break;
+				default:
+					s += c;
+					break;
+			}
+		}
+		return s;
+	}
 }
 
 #endif

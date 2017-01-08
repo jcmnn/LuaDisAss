@@ -5,29 +5,27 @@
 #include <string>
 #include <memory>
 
+#include <iostream>
+
 class WriteBuffer;
 typedef std::shared_ptr<WriteBuffer> WriteBufferPtr;
 
 class WriteBuffer {
 public:
-	inline size_t write(const char *buffer, size_t amount) {
-		return writeBytes(buffer, amount);
-	}
+	size_t writeString(const std::string &buffer);
 
-	size_t write(const std::string &buffer);
-	std::pair<bool, std::string> write(long number);
-	inline std::pair<bool, std::string> write(size_t number) {
-		return write((long)number);
+	template<typename T>
+	inline std::pair<bool, std::string> write(T n) {
+		if (writeBytes(reinterpret_cast<char*>(&n), sizeof(T)) != sizeof(T)) {
+			return std::make_pair(false, "write failed");
+		}
+		return std::make_pair(true, "");
 	};
-	std::pair<bool, std::string> write(int number);
-	std::pair<bool, std::string> write(long double number);
-	std::pair<bool, std::string> write(double number);
-	std::pair<bool, std::string> write(unsigned char byte);
 
 	virtual ~WriteBuffer() {};
 
-protected:
 	virtual size_t writeBytes(const char *buffer, size_t amount) =0;
+
 };
 
 #endif

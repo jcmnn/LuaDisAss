@@ -31,7 +31,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 		switch (GET_OPCODE(*it)) {
 			case OP_MOVE:
 				opout << " %" << a;
-				opout << ", %" << GETARG_B(*it);
+				opout << " %" << GETARG_B(*it);
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; dst, src";
@@ -39,7 +39,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				break;
 			case OP_LOADK:
 				opout << " %" << a;
-				opout << ", const " << function_->constant(INDEXK(GETARG_Bx(*it)))->str();
+				opout << " const " << function_->constant(INDEXK(GETARG_Bx(*it)))->str();
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; dst, const";
@@ -50,7 +50,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				if (GET_OPCODE(*it++) != OP_EXTRAARG) {
 					return std::make_pair(false, "OP_LOADKK needs to be proceded by an OP_EXTRAARG");
 				}
-				opout << ", const " << function_->constant(INDEXK(GETARG_Ax(*it)))->str();
+				opout << " const " << function_->constant(INDEXK(GETARG_Ax(*it)))->str();
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; (load extended: uses OP_EXTRAARG) dst, const";
@@ -59,8 +59,8 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			case OP_LOADBOOL: {
 				opout << " %" << a;
 				int b = GETARG_B(*it);
-				opout << ", " << (b == 0 ? "false" : "true");
-				opout << ", " << GETARG_C(*it);
+				opout << " " << (b == 0 ? "false" : "true");
+				opout << " " << GETARG_C(*it);
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; dst, src, skip (if skip != 0, skip next instruction)";
@@ -69,7 +69,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_LOADNIL:
 				opout << " %" << a;
-				opout << ", " << GETARG_B(*it);
+				opout << " " << GETARG_B(*it);
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; dst, amount (amount = amount of bytes to set i.e. dst...dst+amount";
@@ -77,7 +77,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				break;
 			case OP_GETUPVAL: {
 				opout << " %" << a;
-				opout << ", @" << GETARG_B(*it);
+				opout << " @" << GETARG_B(*it);
 				Upvalue *upval = function_->upvalue(GETARG_B(*it));
 				if (upval != nullptr) {
 					opout << " ; debug name: " << upval->name;
@@ -89,11 +89,11 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_GETTABUP: {
 				opout << " %" << a;
-				opout << ", @" << GETARG_B(*it);
+				opout << " @" << GETARG_B(*it);
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 				Upvalue *upval = function_->upvalue(GETARG_B(*it));
 				if (upval != nullptr) {
@@ -107,11 +107,11 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_GETTABLE: {
 				opout << " %" << a;
-				opout << ", %" << GETARG_B(*it);
+				opout << " %" << GETARG_B(*it);
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -122,15 +122,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			case OP_SETTABUP: {
 				opout << " @" << a;
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_B(*it);
+					opout << " %" << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 
@@ -146,7 +146,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_SETUPVAL: {
 				opout << " @" << GETARG_B(*it);
-				opout << ", %" << a;
+				opout << " %" << a;
 
 				Upvalue *upval = function_->upvalue(GETARG_B(*it));
 				if (upval != nullptr) {
@@ -162,15 +162,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " %" << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_B(*it);
+					opout << " %" << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -180,8 +180,8 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_NEWTABLE: {
 				opout << " %" << a;
-				opout << ", " << GETARG_B(*it);
-				opout << ", " << GETARG_C(*it);
+				opout << " " << GETARG_B(*it);
+				opout << " " << GETARG_C(*it);
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; dst, narr, nrec (narr is a hint for how many elements the table will have as a sequence; nrec is a hint for how many other elements the table will have)";
@@ -190,12 +190,12 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_SELF: {
 				opout << " %" << a;
-				opout << ", %" << GETARG_B(*it);
+				opout << " %" << GETARG_B(*it);
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -207,15 +207,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " %" << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_B(*it);
+					opout << " %" << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -227,15 +227,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " %" << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_B(*it);
+					opout << " %" << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -247,15 +247,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " %" << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_B(*it);
+					opout << " %" << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -267,15 +267,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " %" << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_B(*it);
+					opout << " %" << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -287,15 +287,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " %" << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_B(*it);
+					opout << " %" << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -307,15 +307,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " " << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", " << GETARG_B(*it);
+					opout << " " << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", " << GETARG_C(*it);
+					opout << " " << GETARG_C(*it);
 				}
 				break;
 			}
@@ -323,15 +323,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " " << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", " << GETARG_B(*it);
+					opout << " " << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", " << GETARG_C(*it);
+					opout << " " << GETARG_C(*it);
 				}
 				break;
 			}
@@ -339,15 +339,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " " << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", " << GETARG_B(*it);
+					opout << " " << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", " << GETARG_C(*it);
+					opout << " " << GETARG_C(*it);
 				}
 				break;
 			}
@@ -355,15 +355,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " " << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", " << GETARG_B(*it);
+					opout << " " << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", " << GETARG_C(*it);
+					opout << " " << GETARG_C(*it);
 				}
 				break;
 			}
@@ -371,15 +371,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " " << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", " << GETARG_B(*it);
+					opout << " " << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", " << GETARG_C(*it);
+					opout << " " << GETARG_C(*it);
 				}
 				break;
 			}
@@ -387,15 +387,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " " << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", " << GETARG_B(*it);
+					opout << " " << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", " << GETARG_C(*it);
+					opout << " " << GETARG_C(*it);
 				}
 				break;
 			}*/
@@ -414,15 +414,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " %" << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_B(*it);
+					opout << " %" << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -432,7 +432,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_UNM: {
 				opout << " %" << a;
-				opout << ", %" << GETARG_B(*it);
+				opout << " %" << GETARG_B(*it);
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; dst, a (a can be a stack index, dst = -a)";
@@ -441,7 +441,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_BNOT: {
 				opout << " %" << a;
-				opout << ", %" << GETARG_B(*it);
+				opout << " %" << GETARG_B(*it);
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; dst, src";
@@ -450,7 +450,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_NOT: {
 				opout << " %" << a;
-				opout << ", %" << GETARG_B(*it);
+				opout << " %" << GETARG_B(*it);
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; dst, src (dst = not src)";
@@ -459,7 +459,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_LEN: {
 				opout << " %" << a;
-				opout << ", %" << GETARG_B(*it);
+				opout << " %" << GETARG_B(*it);
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; dst, src";
@@ -468,18 +468,18 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_CONCAT: {
 				opout << " %" << a;
-				opout << ", " << GETARG_B(*it);
-				opout << ", " << GETARG_C(*it);
+				opout << " %" << GETARG_B(*it);
+				opout << " %" << GETARG_C(*it);
 
 				#ifdef IHINTS
-				opout << "\t\t\t ; dst, a, b";
+				opout << "\t\t\t ; dst, a, b (concat values from %a..%b and store result is dst)";
 				#endif
 				break;
 			}
 			case OP_JMP: {
 				opout << " " << a;
 				int loc = (it - code_.begin()) + GETARG_sBx(*it) + 1;
-				opout << ", $location_" << loc;
+				opout << " $location_" << loc;
 
 				locations.push_back(loc);
 
@@ -494,15 +494,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " " << (a == 0 ? "false" : "true");
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_B(*it);
+					opout << " %" << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", %" << GETARG_C(*it);
+					opout << " %" << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -514,15 +514,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " " << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", " << GETARG_B(*it);
+					opout << " " << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", " << GETARG_C(*it);
+					opout << " " << GETARG_C(*it);
 				}
 				break;
 			}
@@ -530,21 +530,21 @@ std::pair<bool, std::string> InstructionParser::parse() {
 				opout << " " << a;
 
 				if (ISK(GETARG_B(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_B(*it)))->str();
 				} else {
-					opout << ", " << GETARG_B(*it);
+					opout << " " << GETARG_B(*it);
 				}
 
 				if (ISK(GETARG_C(*it))) {
-					opout << ", const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
+					opout << " const " << function_->constant(INDEXK(GETARG_C(*it)))->str();
 				} else {
-					opout << ", " << GETARG_C(*it);
+					opout << " " << GETARG_C(*it);
 				}
 				break;
 			}*/
 			case OP_TEST: {
 				opout << " %" << a;
-				opout << ", " << (GETARG_C(*it) == 0 ? "false" : "true");
+				opout << " " << (GETARG_C(*it) == 0 ? "false" : "true");
 
 				#ifdef IHINTS
 				opout << "\t\t\t ; a, invert (skips next instruction if a is not false. If invert then skips if a is false)";
@@ -553,8 +553,8 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_TESTSET: {
 				opout << " %" << a;
-				opout << ", %" << GETARG_B(*it);
-				opout << ", " << (GETARG_C(*it) == 0 ? "false" : "true");
+				opout << " %" << GETARG_B(*it);
+				opout << " " << (GETARG_C(*it) == 0 ? "false" : "true");
 				#ifdef IHINTS
 				opout << "\t\t\t ; a, b, invert (skips next instruction if a is not false. If invert then skips if a is false. sets a to b when not skipping)";
 				#endif
@@ -562,8 +562,8 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_CALL: {
 				opout << " %" << a;
-				opout << ", " << GETARG_B(*it);
-				opout << ", " << GETARG_C(*it);
+				opout << " " << GETARG_B(*it);
+				opout << " " << GETARG_C(*it);
 				#ifdef IHINTS
 				opout  << "\t\t\t ; func, nargs+1, nresults+1";
 				#endif
@@ -571,8 +571,8 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_TAILCALL: {
 				opout << " %" << a;
-				opout << ", " << GETARG_B(*it);
-				opout << ", " << GETARG_C(*it);
+				opout << " " << GETARG_B(*it);
+				opout << " " << GETARG_C(*it);
 
 				#ifdef IHINTS
 				opout  << "\t\t\t ; func, nargs, nresults+1(0) (nresults MUST be LUA_MULTRET (-1))";
@@ -581,7 +581,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_RETURN: {
 				opout << " %" << a;
-				opout << ", " << GETARG_B(*it);
+				opout << " " << GETARG_B(*it);
 
 				#ifdef IHINTS
 				opout  << "\t\t\t ; firstRes, nres+1";
@@ -591,7 +591,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			case OP_FORLOOP: {
 				opout << " %" << a;
 				int loc = (it - code_.begin()) + GETARG_sBx(*it) + 1;
-				opout << ", $location_" << loc;
+				opout << " $location_" << loc;
 
 				locations.push_back(loc);
 
@@ -603,7 +603,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			case OP_FORPREP: {
 				opout << " %" << a;
 				int loc = (it - code_.begin()) + GETARG_sBx(*it) + 1;
-				opout << ", $location_" << loc;
+				opout << " $location_" << loc;
 
 				locations.push_back(loc);
 
@@ -614,7 +614,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_TFORCALL: {
 				opout << " %" << a;
-				opout << ", " << GETARG_C(*it);
+				opout << " " << GETARG_C(*it);
 
 				#ifdef IHINTS
 				opout  << "\t\t\t ; func, nresults (OP_TFORLOOP must be the next instruction)";
@@ -624,7 +624,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			case OP_TFORLOOP: {
 				opout << " %" << a;
 				int loc = (it - code_.begin()) + GETARG_sBx(*it) + 1;
-				opout << ", $location_" << loc;
+				opout << " $location_" << loc;
 
 				locations.push_back(loc);
 
@@ -635,15 +635,15 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_SETLIST: {
 				opout << " %" << a;
-				opout << ", " << GETARG_B(*it);
+				opout << " " << GETARG_B(*it);
 
 				if (GETARG_C(*it) == 0) {
 					if (GET_OPCODE(*it++) != OP_EXTRAARG) {
 						return std::make_pair(false, "OP_SETLIST C=0 needs to be proceded by an OP_EXTRAARG");
 					}
-					opout << ", " << GETARG_Ax(*it);
+					opout << " " << GETARG_Ax(*it);
 				} else {
-					opout << ", " << GETARG_C(*it);
+					opout << " " << GETARG_C(*it);
 				}
 
 				#ifdef IHINTS
@@ -657,9 +657,9 @@ std::pair<bool, std::string> InstructionParser::parse() {
 
 				FunctionPtr f = function_->proto(index);
 				if (f) {
-					opout << ", " << f->label();
+					opout << " " << f->label();
 				} else {
-					opout << ", " << index << " (invalid)";
+					opout << " " << index << " (invalid)";
 				}
 
 				#ifdef IHINTS
@@ -669,7 +669,7 @@ std::pair<bool, std::string> InstructionParser::parse() {
 			}
 			case OP_VARARG: {
 				opout << " %" << a;
-				opout << ", " << GETARG_B(*it);
+				opout << " " << GETARG_B(*it);
 
 				#ifdef IHINTS
 				opout  << "\t\t\t ; base, rres+1";
@@ -685,13 +685,12 @@ std::pair<bool, std::string> InstructionParser::parse() {
 		lines.push_back(opout.str());
 	}
 
-	std::sort(locations.rbegin(), locations.rend());
-
 	for (int i = 0; i < lines.size(); i++) {
 		if (!locations.empty()) {
-			if (locations.front() == i) {
+			std::vector<int>::iterator newEnd;
+			if (locations.end() != (newEnd = std::remove(locations.begin(), locations.end(), i))) {
 				decomp_ << "location_" << i << ":\n";
-				locations.pop_back();
+				locations.erase(newEnd, locations.end());
 			}
 		}
 		decomp_ << "   " << lines[i] << "\n";
