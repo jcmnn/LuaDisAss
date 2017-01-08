@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.4)
-project(LuaDec)
+project(luadisass)
 
 set(SOURCES
 	main.cpp
@@ -13,4 +13,4 @@ set(SOURCES
 	Assembler.cpp
 	opcodes.c)
 
-add_executable(LuaDec ${SOURCES})
+add_executable(luadisass ${SOURCES})
