@@ -5,7 +5,7 @@ A lightweight disassembler and assembler for lua 5.3 bytecode
 Usage
 -----
 
-### Disasembling
+### Disassembling
 To disassemble a function dumped with string.dump, run
 ```
 luadisass -d <dump> <output>
