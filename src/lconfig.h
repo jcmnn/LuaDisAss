@@ -1,4 +1,4 @@
-#ifndef LCONFIG_H
+﻿#ifndef LCONFIG_H
 #define LCONFIG_H
 
 #define ERIS
@@ -7,15 +7,25 @@
 
 #define LUA_VERSION_MAJOR 5
 #define LUA_VERSION_MINOR 3
+#define LUA_VERSION_NUM		503
+#define LUA_VERSION_RELEASE	"4"
 
 #define LUA_SIGNATURE "\x1bLua"
 #define LUAC_VERSION (LUA_VERSION_MAJOR * 16) + LUA_VERSION_MINOR
+#define LUA_VERSION	"Lua " LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
+#define LUA_RELEASE	LUA_VERSION "." LUA_VERSION_RELEASE
 
 #define LUAC_FORMAT 0
 
 #define LUAC_DATA "\x19\x93\r\n\x1a\n"
+
+
+#define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2017 Lua.org, PUC-Rio"
+#define LUA_AUTHORS	"R. Ierusalimschy, L. H. de Figueiredo, W. Celes"
+
+
 typedef double lua_Number;
-typedef long lua_Integer;
+typedef long long lua_Integer;
 typedef unsigned int Instruction;
 #define LUAC_INT 0x5678
 #define LUAC_NUM (lua_Number)(370.5)

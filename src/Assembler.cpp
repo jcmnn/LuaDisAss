@@ -1,4 +1,4 @@
-#include "Assembler.h"
+﻿#include "Assembler.h"
 
 #include <cstring>
 #include <limits>
@@ -888,7 +888,7 @@ std::pair<bool, std::string> Assembler::writeFunction(ParsedFunctionPtr function
 		for (auto it = function->neededSubroutines.begin(); it != function->neededSubroutines.end();) {
 			if (it->first == pName) {
 				SETARG_Bx(function->instructions[it->second], i);
-				function->neededSubroutines.erase(it);
+				it = function->neededSubroutines.erase(it);
 			} else {
 				it++;
 			}

@@ -1,10 +1,11 @@
-#ifndef PARSER_H
+﻿#ifndef PARSER_H
 #define PARSER_H
 
 #include "Buffer.h"
 #include "lconfig.h"
 #include <utility>
 #include <cstring>
+#include <vector>
 
 class Parser {
 public:
@@ -23,12 +24,13 @@ private:
 
 	bool checkLiteral(const char *literal) {
 		size_t len = std::strlen(literal);
-		char bytes[len];
-		if (buffer_->read(bytes, len) != len) {
+        std::vector<char> bytes;
+        bytes.resize(len);
+		if (buffer_->read(bytes.data(), len) != len) {
 			return false;
 		}
 
-		return std::memcmp(bytes, literal, len) == 0;
+		return std::memcmp(bytes.data(), literal, len) == 0;
 	}
 
 	inline bool checkByte(unsigned char byte) {

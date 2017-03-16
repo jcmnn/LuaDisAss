@@ -1,22 +1,31 @@
-#include "Buffer.h"
+﻿#include "Buffer.h"
+#include <vector>
 
 size_t Buffer::read(std::string &buffer, size_t amount) {
-	char tbuf[amount];
-	size_t ret = readBytes(tbuf, amount);
+    std::vector<char> tbuf;
+    tbuf.resize(amount);
+	size_t ret = readBytes(tbuf.data(), amount);
 	if (ret != amount) {
 		return ret;
 	}
 
-	buffer.assign(tbuf, amount);
+	buffer.assign(tbuf.data(), amount);
 	return amount;
 }
 
 
-std::pair<bool, std::string> Buffer::read(int &number) {
-	if (readBytes(reinterpret_cast<char*>(&number), sizeof(int)) != sizeof(int)) {
+std::pair<bool, std::string> Buffer::read(__int32 &number) {
+	if (readBytes(reinterpret_cast<char*>(&number), sizeof(__int32)) != sizeof(__int32)) {
 		return std::make_pair(false, "read failed; end of stream?");
 	}
 	return std::make_pair(true, "");
+}
+
+std::pair<bool, std::string> Buffer::read(__int64 &number) {
+  if (readBytes(reinterpret_cast<char*>(&number), sizeof(__int64)) != sizeof(__int64)) {
+    return std::make_pair(false, "read failed; end of stream?");
+  }
+  return std::make_pair(true, "");
 }
 
 

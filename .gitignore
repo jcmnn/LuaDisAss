@@ -1,1 +1,14 @@
+/.vs
+/.vscode
+/Debug
+/Release
+/x64
+/*.sln
+*~
+/*.vcxproj
+/*.vcxproj.filters
+/*.vcxproj.user
 build
+/test1.out
+/test.out
+

@@ -1,7 +1,7 @@
-#include "opcodes.h"
+﻿#include "opcodes.h"
 #include <stddef.h>
 
-const char *const luaP_opnames[NUM_OPCODES+1] = {
+const std::vector<const char *> luaP_opnames = {
   "move",
   "loadk",
   "loadkx",

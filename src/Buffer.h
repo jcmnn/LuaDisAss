@@ -1,4 +1,4 @@
-#ifndef BUFFER_H
+﻿#ifndef BUFFER_H
 #define BUFFER_H
 
 #include <utility>
@@ -19,10 +19,11 @@ public:
 	inline std::pair<bool, std::string> read(size_t &number) {
 		return read((long&)number);
 	};
-	std::pair<bool, std::string> read(int &number);
+	std::pair<bool, std::string> read(__int32 &number);
 	std::pair<bool, std::string> read(long double &number);
 	std::pair<bool, std::string> read(double &number);
 	std::pair<bool, std::string> read(unsigned char &byte);
+    std::pair<bool, std::string> read(__int64 &number);
 
 	virtual std::pair<bool, std::string> readLine(std::string &buffer) =0;
 
