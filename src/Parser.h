@@ -11,7 +11,7 @@ class Parser {
 public:
 	Parser(Buffer *buffer);
 
-	std::pair<bool, std::string> parse(std::string &out);
+	Util::BoolRes parse(std::string &out);
 	inline std::string label() {
 		if (labels_++ == 0) {
 			return "main";
@@ -20,7 +20,7 @@ public:
 	}
 
 private:
-	std::pair<bool, std::string> parseHeader();
+	Util::BoolRes parseHeader();
 
 	bool checkLiteral(const char *literal) {
 		size_t len = std::strlen(literal);
@@ -35,7 +35,7 @@ private:
 
 	inline bool checkByte(unsigned char byte) {
 		unsigned char b;
-		return buffer_->read(b).first && byte == b;
+		return buffer_->read(b).success() && byte == b;
 	}
 
 	inline bool checkInteger(lua_Integer n) {
@@ -52,7 +52,7 @@ private:
 
 	unsigned int labels_;
 
-	std::pair<bool, std::string> loadString(std::string &out);
+	Util::BoolRes loadString(std::string &out);
 
 	BufferPtr buffer_;
 };

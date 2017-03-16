@@ -11,7 +11,9 @@
 #define LUA_VERSION_RELEASE	"4"
 
 #define LUA_SIGNATURE "\x1bLua"
+
 #define LUAC_VERSION (LUA_VERSION_MAJOR * 16) + LUA_VERSION_MINOR
+
 #define LUA_VERSION	"Lua " LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
 #define LUA_RELEASE	LUA_VERSION "." LUA_VERSION_RELEASE
 
@@ -29,6 +31,9 @@ typedef long long lua_Integer;
 typedef unsigned int Instruction;
 #define LUAC_INT 0x5678
 #define LUAC_NUM (lua_Number)(370.5)
+
+// bytecode headers' size_t type
+#define LUA_SIZE_T_TYPE size_t
 
 
 #define LUA_TNONE		(-1)

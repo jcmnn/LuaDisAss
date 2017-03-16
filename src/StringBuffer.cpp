@@ -18,9 +18,9 @@ size_t StringBuffer::readBytes(char *buffer, size_t amount) {
 	return amount;
 }
 
-std::pair<bool, std::string> StringBuffer::readLine(std::string &buffer) {
+Util::BoolRes StringBuffer::readLine(std::string &buffer) {
 	if (buffer_.empty()) {
-		return std::make_pair(false, "end of stream");
+		return Util::BoolRes(false, "end of stream");
 	}
 
 	auto pos = buffer_.find("\n");
@@ -30,7 +30,7 @@ std::pair<bool, std::string> StringBuffer::readLine(std::string &buffer) {
 		if (buffer.back() == '\r') {
 			buffer.pop_back();
 		}
-		return std::make_pair(true, "");
+		return Util::BoolRes(true, "");
 	}
 
 	buffer.assign(buffer_.begin(), buffer_.begin() + pos);
@@ -39,5 +39,5 @@ std::pair<bool, std::string> StringBuffer::readLine(std::string &buffer) {
 	if (buffer.back() == '\r') {
 		buffer.pop_back();
 	}
-	return std::make_pair(true, "");
+	return Util::BoolRes(true, "");
 }

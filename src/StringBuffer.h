@@ -1,7 +1,8 @@
-#ifndef STRINGBUFFER_H
+﻿#ifndef STRINGBUFFER_H
 #define STRINGBUFFER_H
 
 #include "Buffer.h"
+#include "util.h"
 
 class StringBuffer : public Buffer {
 public:
@@ -9,7 +10,7 @@ public:
 	StringBuffer(std::string &&buffer);
 
 	size_t readBytes(char *buffer, size_t amount) override;
-	std::pair<bool, std::string> readLine(std::string &buffer) override;
+	Util::BoolRes readLine(std::string &buffer) override;
 
 private:
 	std::string buffer_;

@@ -1,14 +1,14 @@
-#include "Parser.h"
+﻿#include "Parser.h"
 #include "lconfig.h"
 #include "Function.h"
 
-#define CHK_ASSERT(f, msg) if (!f) return std::make_pair(false, msg);
+#define CHK_ASSERT(f, msg) if (!f) return Util::BoolRes(false, msg);
 
 Parser::Parser(Buffer *buffer) : buffer_(buffer), labels_(0) {
 
 }
 
-std::pair<bool, std::string> Parser::parseHeader() {
+Util::BoolRes Parser::parseHeader() {
 	CHK_ASSERT(checkLiteral(LUA_SIGNATURE), "signature check failed");
 	CHK_ASSERT(checkByte(LUAC_VERSION), "version check failed");
 	CHK_ASSERT(checkByte(LUAC_FORMAT), "format check failed");
@@ -21,27 +21,27 @@ std::pair<bool, std::string> Parser::parseHeader() {
 	CHK_ASSERT(checkInteger(LUAC_INT), "endianness mismatch");
 	CHK_ASSERT(checkNumber(LUAC_NUM), "float format mismatch");
 
-	return std::make_pair(true, "");
+	return Util::BoolRes(true, "");
 }
 
-std::pair<bool, std::string> Parser::parse(std::string &out) {
+Util::BoolRes Parser::parse(std::string &out) {
 	if (!buffer_) {
-		return std::make_pair(false, "invalid buffer");
+		return Util::BoolRes(false, "invalid buffer");
 	}
 	auto res = parseHeader();
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 
 	unsigned char numUpvalues;
 	res = buffer_->read(numUpvalues);
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 
 	Function func(this, buffer_);
 	res = func.loadFunction();
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 

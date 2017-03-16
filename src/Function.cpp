@@ -1,137 +1,139 @@
-#include "Function.h"
+﻿#include "Function.h"
 #include "InstructionParser.h"
 #include "Parser.h"
+#include "util.h"
 
-std::pair<bool, std::string> Function::loadString(std::string &out) {
+Util::BoolRes Function::loadString(std::string &out) {
 	size_t size = 0;
 	auto res = buffer_->read((unsigned char&)size);
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 	if (size == 0xFF) {
 		res = buffer_->read(size);
-		if (!res.first) {
+		if (!res.success()) {
 			return res;
 		}
 	}
 
 	if (size == 0) {
-		return std::make_pair(true, "");
+		return Util::BoolRes(true, "");
 	}
 
 	buffer_->read(out, size - 1);
-	return std::make_pair(true, "");
+	return Util::BoolRes(true, "");
 }
 
-std::pair<bool, std::string> Function::loadCode() {
+Util::BoolRes Function::loadCode() {
 	int n;
 	auto res = buffer_->read(n);
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 
 	code_.resize(n);
 
 	if (buffer_->read((char*)code_.data(), n * sizeof(Instruction)) != n * sizeof(Instruction)) {
-		return std::make_pair(false, "failed to read code");
+		return Util::BoolRes(false, "failed to read code");
 	}
-	return std::make_pair(true, "");
+	return Util::BoolRes(true, "");
 }
 
-std::pair<bool, std::string> Function::loadProtos() {
+Util::BoolRes Function::loadProtos() {
 	int n;
 	auto res = buffer_->read(n);
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 
 	for (int i = 0; i < n; i++) {
 		FunctionPtr function = FunctionPtr(new Function(parser_, buffer_));
-		if (!(res = function->loadFunction()).first) {
+		if (!(res = function->loadFunction()).success()) {
 			return res;
 		}
 		protos_.push_back(function);
 	}
+    throw std::exception();
 }
 
-std::pair<bool, std::string> Function::loadDebug() {
+Util::BoolRes Function::loadDebug() {
 	int n;
 	auto res = buffer_->read(n); // lineinfo
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 
 	lineInfo_.resize(n);
 	if (buffer_->read((char*)lineInfo_.data(), n * sizeof(int)) != n * sizeof(int)) {
-		return std::make_pair(false, "failed to read lineinfo (eof?)");
+		return Util::BoolRes(false, "failed to read lineinfo (eof?)");
 	}
 
-	if (!(res = buffer_->read(n)).first) { // locvars
+	if (!(res = buffer_->read(n)).success()) { // locvars
 		return res;
 	}
 
 	locVars_.resize(n);
 
 	for (int i = 0; i < n; i++) {
-		if (!(res = loadString(locVars_[i].varName)).first) {
+		if (!(res = loadString(locVars_[i].varName)).success()) {
 			return res;
 		}
-		if (!(res = buffer_->read(locVars_[i].startpc)).first) {
+		if (!(res = buffer_->read(locVars_[i].startpc)).success()) {
 			return res;
 		}
-		if (!(res = buffer_->read(locVars_[i].endpc)).first) {
+		if (!(res = buffer_->read(locVars_[i].endpc)).success()) {
 			return res;
 		}
 	}
 
-	if (!(res = buffer_->read(n)).first) { // upvalue names
+	if (!(res = buffer_->read(n)).success()) { // upvalue names
 		return res;
 	}
 
 	if (n > upvalues_.size()) {
-		return std::make_pair(false, "the upvalue debug names array size is larger than the upvalues");
+		return Util::BoolRes(false, "the upvalue debug names array size is larger than the upvalues");
 	}
 
 	for (int i = 0; i < n; i++) {
-		if (!(res = loadString(upvalues_[i].name)).first) {
+		if (!(res = loadString(upvalues_[i].name)).success()) {
 			return res;
 		}
 	}
 
 
-	return std::make_pair(true, "");
+	return Util::BoolRes(true, "");
 }
 
-std::pair<bool, std::string> Function::loadUpvalues() {
+Util::BoolRes Function::loadUpvalues() {
 	int n;
 	auto res = buffer_->read(n);
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 
 	upvalues_.resize(n);
 	for (int i = 0; i < n; i++) {
-		if (!(res = buffer_->read(upvalues_[i].instack)).first) {
+		if (!(res = buffer_->read(upvalues_[i].instack)).success()) {
 			return res;
 		}
-		if (!(res = buffer_->read(upvalues_[i].idx)).first) {
+		if (!(res = buffer_->read(upvalues_[i].idx)).success()) {
 			return res;
 		}
 	}
 
-	return std::make_pair(true, "");
+	return Util::BoolRes(true, "");
 }
 
-std::pair<bool, std::string> Function::loadConstants() {
+Util::BoolRes Function::loadConstants() {
 	int n;
 	auto res = buffer_->read(n);
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 
 	for (int i = 0; i < n; i++) {
 		unsigned char t;
-		if (!(res = buffer_->read(t)).first) {
+		if (!(res = buffer_->read(t)).success()) {
 			return res;
 		}
 		switch (t) {
@@ -140,21 +142,21 @@ std::pair<bool, std::string> Function::loadConstants() {
 			break;
 		case LUA_TBOOLEAN:
 			unsigned char b;
-			if (!(res = buffer_->read(b)).first) {
+			if (!(res = buffer_->read(b)).success()) {
 				return res;
 			}
 			constants_.push_back(TValuePtr(new TBool(b != 0)));
 			break;
 		case LUA_TNUMFLT:
 			lua_Number num;
-			if (!(res = buffer_->read(num)).first) {
+			if (!(res = buffer_->read(num)).success()) {
 				return res;
 			}
 			constants_.push_back(TValuePtr(new TNumber(num)));
 			break;
 		case LUA_TNUMINT:
 			lua_Integer in;
-			if (!(res = buffer_->read(in)).first) {
+			if (!(res = buffer_->read(in)).success()) {
 				return res;
 			}
 			constants_.push_back(TValuePtr(new TNumber(in)));
@@ -162,62 +164,62 @@ std::pair<bool, std::string> Function::loadConstants() {
 		case LUA_TSHRSTR:
 		case LUA_TLNGSTR: {
 			std::string string;
-			if (!(res = loadString(string)).first) {
+			if (!(res = loadString(string)).success()) {
 				return res;
 			}
 			constants_.push_back(TValuePtr(new TString(std::move(string))));
 			break;
 		}
 		default: {
-			return std::make_pair(false, "invalid constant type");
+			return Util::BoolRes(false, "invalid constant type");
 		}
 		}
 	}
 
-	return std::make_pair(true, "");
+	return Util::BoolRes(true, "");
 }
 
-std::pair<bool, std::string> Function::loadFunction() {
+Util::BoolRes Function::loadFunction() {
 	std::string source;
 	auto res = loadString(source);
-	if (!res.first) {
+	if (!res.success()) {
 		return res;
 	}
 
-	if (!(res = buffer_->read(lineDefined_)).first) {
+	if (!(res = buffer_->read(lineDefined_)).success()) {
 		return res;
 	}
-	if (!(res = buffer_->read(lastLineDefined_)).first) {
+	if (!(res = buffer_->read(lastLineDefined_)).success()) {
 		return res;
 	}
-	if (!(res = buffer_->read(numParams_)).first) {
+	if (!(res = buffer_->read(numParams_)).success()) {
 		return res;
 	}
-	if (!(res = buffer_->read(isVarArg_)).first) {
+	if (!(res = buffer_->read(isVarArg_)).success()) {
 		return res;
 	}
-	if (!(res = buffer_->read(maxStackSize_)).first) {
+	if (!(res = buffer_->read(maxStackSize_)).success()) {
 		return res;
 	}
 
-	if (!(res = loadCode()).first) {
+	if (!(res = loadCode()).success()) {
 		return res;
 	}
-	if (!(res = loadConstants()).first) {
+	if (!(res = loadConstants()).success()) {
 		return res;
 	}
-	if (!(res = loadUpvalues()).first) {
+	if (!(res = loadUpvalues()).success()) {
 		return res;
 	}
-	if (!(res = loadProtos()).first) {
+	if (!(res = loadProtos()).success()) {
 		return res;
 	}
-	if (!(res = loadDebug()).first) {
+	if (!(res = loadDebug()).success()) {
 		return res;
 	}
 
 	InstructionParser parser(this, std::move(code_));
-	if (!(res = parser.parse()).first) {
+	if (!(res = parser.parse()).success()) {
 		return res;
 	}
 
@@ -248,7 +250,7 @@ std::pair<bool, std::string> Function::loadFunction() {
 		disas_ << (*it)->disas() << "\n";
 	}
 
-	return std::make_pair(true, "");
+	return Util::BoolRes(true, "");
 }
 
 Function::Function(Parser *parser, const BufferPtr &buffer) : parser_(parser), buffer_(buffer) {

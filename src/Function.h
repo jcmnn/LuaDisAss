@@ -27,7 +27,7 @@ class Function {
 public:
 	Function(Parser *parser, const BufferPtr &buffer);
 
-	std::pair<bool, std::string> loadFunction();
+	Util::BoolRes loadFunction();
 
 	inline Upvalue *upvalue(size_t i) {
 		if (i < upvalues_.size())
@@ -58,12 +58,12 @@ public:
 		return FunctionPtr(nullptr);
 	}
 private:
-	std::pair<bool, std::string> loadString(std::string &out);
-	std::pair<bool, std::string> loadCode();
-	std::pair<bool, std::string> loadConstants();
-	std::pair<bool, std::string> loadUpvalues();
-	std::pair<bool, std::string> loadProtos();
-	std::pair<bool, std::string> loadDebug();
+	Util::BoolRes loadString(std::string &out);
+	Util::BoolRes loadCode();
+	Util::BoolRes loadConstants();
+	Util::BoolRes loadUpvalues();
+	Util::BoolRes loadProtos();
+	Util::BoolRes loadDebug();
 
 	BufferPtr buffer_;
 	std::vector<Instruction> code_;

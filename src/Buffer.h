@@ -4,6 +4,8 @@
 #include <utility>
 #include <string>
 #include <memory>
+#include <stdint.h>
+#include "util.h"
 
 class Buffer;
 typedef std::shared_ptr<Buffer> BufferPtr;
@@ -15,17 +17,17 @@ public:
 	}
 
 	size_t read(std::string &buffer, size_t amount);
-	std::pair<bool, std::string> read(long &number);
-	inline std::pair<bool, std::string> read(size_t &number) {
+	Util::BoolRes read(long &number);
+	inline Util::BoolRes read(size_t &number) {
 		return read((long&)number);
 	};
-	std::pair<bool, std::string> read(__int32 &number);
-	std::pair<bool, std::string> read(long double &number);
-	std::pair<bool, std::string> read(double &number);
-	std::pair<bool, std::string> read(unsigned char &byte);
-    std::pair<bool, std::string> read(__int64 &number);
+	Util::BoolRes read(int32_t &number);
+	Util::BoolRes read(long double &number);
+	Util::BoolRes read(double &number);
+	Util::BoolRes read(unsigned char &byte);
+    Util::BoolRes read(int64_t &number);
 
-	virtual std::pair<bool, std::string> readLine(std::string &buffer) =0;
+	virtual Util::BoolRes readLine(std::string &buffer) =0;
 
 	virtual ~Buffer() {};
 

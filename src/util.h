@@ -1,4 +1,4 @@
-#ifndef UTIL_H
+﻿#ifndef UTIL_H
 #define UTIL_H
 
 #include <algorithm>
@@ -7,6 +7,18 @@
 #include <functional>
 
 namespace Util {
+
+    class BoolRes
+    {
+    private:
+      bool _success;
+      std::string _error_msg;
+    public:
+      inline BoolRes(bool success=false, std::string error_msg="") : _success(success), _error_msg(error_msg) {}
+      inline bool success() const { return _success; }
+      inline std::string error_msg() const { return _error_msg; }
+    };
+
 	static inline void trim(std::string &s) {
 		s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
 		s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
