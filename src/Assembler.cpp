@@ -66,10 +66,55 @@ inline const char *parseInt(T &out, const char *start, const char *end) {
 	return iend;
 }
 
+std::string Assembler::get_line_comment_from_asm_line_code(const char *line, size_t len)
+{
+  std::string line_comment;
+  const char *comment_start = nullptr;
+  for (auto i = line + 1; i < line + len; ++i) {
+    if (*i == ';') {
+      comment_start = i;
+      break;
+    }
+  }
+  if (comment_start) {
+    line_comment.assign(comment_start, line + len);
+  }
+  return line_comment;
+}
+
+int Assembler::get_linenumber_from_asm_line_comment(std::string line_comment)
+{
+  int linenumber = -1;
+  if (line_comment.size() >= 3 && line_comment[0] == ';' && line_comment[1] == 'L')
+  {
+    std::vector<char> line_number_chars;
+    for (size_t i = 2; i < line_comment.length(); ++i)
+    {
+      auto ic = line_comment[i];
+      if (isdigit(ic)) {
+        line_number_chars.push_back(ic);
+      }
+      else {
+        break;
+      }
+    }
+    line_number_chars.push_back('\0');
+    if (line_comment.length() >= 2 + line_number_chars.size() - 1 + 1
+      && line_comment[2 + line_number_chars.size() - 1] == ';' && line_number_chars.size() >= 2) {
+      // this is ";L<digit>;" + other line comment style
+      std::string line_number_str(line_number_chars.data());
+      linenumber = std::stoi(line_number_str);
+    }
+  }
+  return linenumber;
+}
+
 inline Util::BoolRes Assembler::parseDirective(const char *line, size_t len) {
 	std::string name;
+    // line's first char is '.'
 	const char *c = line + 1;
 	const char *end = line + len;
+    const char *comment_start = nullptr; // line comment start position
 	for (; c != end; c++) {
 		if (!(std::isalnum(*c) || *c == '_')) {
 			if (std::isblank(*c) || *c == ';') {
@@ -81,10 +126,20 @@ inline Util::BoolRes Assembler::parseDirective(const char *line, size_t len) {
 			return Util::BoolRes(false, std::string("could not parse directive: illegal character '") + *c + "'");
 		}
 	}
+    for (auto i = line + 1; i < line + len; ++i) {
+      if (*i == ';') {
+        comment_start = i;
+        break;
+      }
+    }
+    // here c is the end position of directive name
 	name.assign(&line[1], c);
+    
 	if (name.empty()) {
 		return Util::BoolRes(false, "could not parse directive");
 	}
+    auto line_comment = get_line_comment_from_asm_line_code(line, len);
+    int linenumber = get_linenumber_from_asm_line_comment(line_comment);
 
 	Util::lower(name);
 	if (name == "upvalues") {
@@ -636,6 +691,13 @@ inline Util::BoolRes Assembler::parseCode(const char *line, size_t len) {
 		return Util::BoolRes(false, "invalid opcode");
 	}
 
+    auto line_comment = get_line_comment_from_asm_line_code(line, len);
+    auto linenumber = get_linenumber_from_asm_line_comment(line_comment);
+    if (linenumber >= 0)
+    {
+      lineinfos_.push_back(linenumber);
+    }
+
 	if (bend != end && *bend == ':') { // location
 		locations_[opcodestr] = instructions_.size();
 
@@ -801,6 +863,9 @@ Util::BoolRes Assembler::finalizeFunction() {
 	func->params = f_params_;
 	func->vararg = f_vararg_;
 
+    func->lineinfos = lineinfos_;
+    lineinfos_.clear();
+
 	functions_[func->name] = func;
 
 	return Util::BoolRes(true, "");
@@ -956,9 +1021,16 @@ Util::BoolRes Assembler::writeFunction(ParsedFunctionPtr function) {
 		}
 	}
 
-	if (!(res = wbuffer_->write<int>(0)).success()) { // line info size (unimplemented)
+    // dumpSizeLineinfos and dumpVector(lineinfos)
+	if (!(res = wbuffer_->write<int>(function->lineinfos.size())).success()) { // line info size
 		return res;
 	}
+    // dumpVector(lineinfos)
+    if (function->lineinfos.size() > 0)
+    {
+        wbuffer_->writeBytes((const char *)function->lineinfos.data(), function->lineinfos.size() * sizeof(function->lineinfos[0]));
+    }
+
 	if (!(res = wbuffer_->write<int>(0)).success()) { // local var size (unimplemented)
 		return res;
 	}

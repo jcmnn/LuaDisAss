@@ -19,6 +19,7 @@ struct ParsedFunction {
 	std::vector<Instruction> instructions;
 	std::vector<Upvalue> upvalues;
 	std::vector<std::string> usedSubroutines;
+    std::vector<int> lineinfos;
 	std::vector<std::pair<std::string, int> > neededSubroutines;
 	std::vector<TValuePtr> constants;
 	unsigned char maxstacksize, params, vararg;
@@ -97,8 +98,16 @@ private:
 	std::vector<std::pair<std::string, int> > neededSubroutines_;
 	std::vector<std::pair<std::string, int> > neededLocations_; // for jmps to the future
 	std::unordered_map<std::string, int> locations_;
+
+    std::vector<int> lineinfos_;
+
 	unsigned int f_maxstacksize_, f_params_, f_vararg_;
 	std::vector<TValuePtr> constants_;
+
+    std::string get_line_comment_from_asm_line_code(const char *line, size_t len);
+
+    // fetch linenumber from line comment of ";L<digits>;<other_line_comment>" style. -1 for not exist defined line number
+    int get_linenumber_from_asm_line_comment(std::string line_comment);
 	/* end of function-specific data */
 };
 

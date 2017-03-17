@@ -1,9 +1,9 @@
-.upvalues 1
+.upvalues 1  ;L1;  comment test
 
 .func main 5 0 2 ; source: @test.lua ; maxstacksize: 5, params: 0, vararg: 2 (declared vararg)
 .begin_const
    "asd"
-   "Hello"
+   "Hello"    
    " world!"
 .end_const
 
@@ -16,8 +16,9 @@
 .begin_code
    loadk %0 const "asd"
    closure %1 subroutine_2
+   
    move %2 %1
-   loadk %3 const "Hello"
+   loadk %3 const "Hello"  ;L10; this is a line position comment
    loadk %4 const " world!"
    call %2 3 1
    return %0 1
