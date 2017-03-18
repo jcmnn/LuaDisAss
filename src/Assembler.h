@@ -1,4 +1,4 @@
-﻿#ifndef ASSEMBLER_H
+#ifndef ASSEMBLER_H
 #define ASSEMBLER_H
 
 #include <utility>
@@ -19,7 +19,6 @@ struct ParsedFunction {
 	std::vector<Instruction> instructions;
 	std::vector<Upvalue> upvalues;
 	std::vector<std::string> usedSubroutines;
-    std::vector<int> lineinfos;
 	std::vector<std::pair<std::string, int> > neededSubroutines;
 	std::vector<TValuePtr> constants;
 	unsigned char maxstacksize, params, vararg;
@@ -28,7 +27,7 @@ struct ParsedFunction {
 class Assembler {
 public:
 	Assembler(Buffer *rbuffer, WriteBufferPtr wbuffer);
-    Util::BoolRes assemble();
+	std::pair<bool, std::string> assemble();
 
 private:
 	class Operand {
@@ -51,18 +50,18 @@ private:
 		int value_; // stack index, const id, location id (or -1 if unknown), upvalue index, embedded integer
 	};
 
-    Util::BoolRes writeHeader();
+	std::pair<bool, std::string> writeHeader();
 
-    Util::BoolRes parseLine(const char *line, size_t len);
-    Util::BoolRes parseDirective(const char *line, size_t len);
-    Util::BoolRes finalizeFunction();
+	std::pair<bool, std::string> parseLine(const char *line, size_t len);
+	std::pair<bool, std::string> parseDirective(const char *line, size_t len);
+	std::pair<bool, std::string> finalizeFunction();
 	const char *parseConstant(const char *start, const char *end, size_t *id); // returns nullptr if the operand could not be parsed
-    Util::BoolRes parseCode(const char *line, size_t len);
-    Util::BoolRes parseUpvalue(const char *line, size_t len);
+	std::pair<bool, std::string> parseCode(const char *line, size_t len);
+	std::pair<bool, std::string> parseUpvalue(const char *line, size_t len);
 	const char *parseOperand(Operand &operand, const char *start, const char *end, unsigned int limit = 0xFFFFFFFF); // returns nullptr if the operand could not be parsed
 
-    Util::BoolRes writeFunction(ParsedFunctionPtr function);
-    Util::BoolRes writeString(const std::string &string);
+	std::pair<bool, std::string> writeFunction(ParsedFunctionPtr function);
+	std::pair<bool, std::string> writeString(const std::string &string);
 
 	WriteBufferPtr wbuffer_;
 	BufferPtr rbuffer_;
@@ -98,16 +97,8 @@ private:
 	std::vector<std::pair<std::string, int> > neededSubroutines_;
 	std::vector<std::pair<std::string, int> > neededLocations_; // for jmps to the future
 	std::unordered_map<std::string, int> locations_;
-
-    std::vector<int> lineinfos_;
-
 	unsigned int f_maxstacksize_, f_params_, f_vararg_;
 	std::vector<TValuePtr> constants_;
-
-    std::string get_line_comment_from_asm_line_code(const char *line, size_t len);
-
-    // fetch linenumber from line comment of ";L<digits>;<other_line_comment>" style. -1 for not exist defined line number
-    int get_linenumber_from_asm_line_comment(std::string line_comment);
 	/* end of function-specific data */
 };
 

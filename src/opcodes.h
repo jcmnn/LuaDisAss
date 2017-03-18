@@ -1,7 +1,5 @@
-﻿#ifndef OPCODES_H
+#ifndef OPCODES_H
 #define OPCODES_H
-
-#include <vector>
 
 // mostly copied from Lua's source
 
@@ -233,7 +231,7 @@ extern const unsigned char luaP_opmodes[NUM_OPCODES];
 #define testTMode(m)	(luaP_opmodes[m] & (1 << 7))
 
 
-extern const std::vector<const char *> luaP_opnames;  /* opcode names */
+extern const char *const luaP_opnames[NUM_OPCODES+1];  /* opcode names */
 
 
 /* number of list items to accumulate before a SETLIST instruction */

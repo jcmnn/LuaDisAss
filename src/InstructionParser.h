@@ -14,7 +14,7 @@ public:
 	InstructionParser(Function *function, const std::vector<Instruction> &code);
 	InstructionParser(Function *function, std::vector<Instruction> &&code);
 
-	Util::BoolRes parse();
+	std::pair<bool, std::string> parse();
 
 	inline std::string disas() {
 		return decomp_.str();

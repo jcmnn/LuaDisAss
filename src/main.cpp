@@ -1,4 +1,4 @@
-﻿#include <string>
+#include <string>
 #include <fstream>
 #include <iterator>
 #include "StringBuffer.h"
@@ -33,9 +33,9 @@ int main(int argc, char *argv[]) {
 
 		std::string out;
 		auto res = parser.parse(out);
-		std::cout << "success: " << res.success() << " (" << res.error_msg() << ")" << std::endl;
+		std::cout << "success: " << res.first << " (" << res.second << ")" << std::endl;
 
-		if (res.success()) {
+		if (res.first) {
 			std::ofstream of(argv[3], std::ifstream::binary);
 			if (!of.is_open()) {
 				std::cerr << "could not open file " << argv[3] << std::endl;
@@ -62,9 +62,9 @@ int main(int argc, char *argv[]) {
 
 		Assembler ass(new StringBuffer(std::move(dump)), wbuffer);
 		auto res = ass.assemble();
-		std::cerr << "success: " << res.success() << " (" << res.error_msg() << ")" << std::endl;
+		std::cerr << "success: " << res.first << " (" << res.second << ")" << std::endl;
 
-		if (res.success()) {
+		if (res.first) {
 			std::ofstream of(argv[3], std::ifstream::binary);
 			if (!of.is_open()) {
 				std::cerr << "could not open file " << argv[3] << std::endl;
