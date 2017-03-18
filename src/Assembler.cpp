@@ -1,4 +1,4 @@
-﻿#include "Assembler.h"
+#include "Assembler.h"
 
 #include <cstring>
 #include <limits>
@@ -66,55 +66,10 @@ inline const char *parseInt(T &out, const char *start, const char *end) {
 	return iend;
 }
 
-std::string Assembler::get_line_comment_from_asm_line_code(const char *line, size_t len)
-{
-  std::string line_comment;
-  const char *comment_start = nullptr;
-  for (auto i = line + 1; i < line + len; ++i) {
-    if (*i == ';') {
-      comment_start = i;
-      break;
-    }
-  }
-  if (comment_start) {
-    line_comment.assign(comment_start, line + len);
-  }
-  return line_comment;
-}
-
-int Assembler::get_linenumber_from_asm_line_comment(std::string line_comment)
-{
-  int linenumber = -1;
-  if (line_comment.size() >= 3 && line_comment[0] == ';' && line_comment[1] == 'L')
-  {
-    std::vector<char> line_number_chars;
-    for (size_t i = 2; i < line_comment.length(); ++i)
-    {
-      auto ic = line_comment[i];
-      if (isdigit(ic)) {
-        line_number_chars.push_back(ic);
-      }
-      else {
-        break;
-      }
-    }
-    line_number_chars.push_back('\0');
-    if (line_comment.length() >= 2 + line_number_chars.size() - 1 + 1
-      && line_comment[2 + line_number_chars.size() - 1] == ';' && line_number_chars.size() >= 2) {
-      // this is ";L<digit>;" + other line comment style
-      std::string line_number_str(line_number_chars.data());
-      linenumber = std::stoi(line_number_str);
-    }
-  }
-  return linenumber;
-}
-
-inline Util::BoolRes Assembler::parseDirective(const char *line, size_t len) {
+inline std::pair<bool, std::string> Assembler::parseDirective(const char *line, size_t len) {
 	std::string name;
-    // line's first char is '.'
 	const char *c = line + 1;
 	const char *end = line + len;
-    const char *comment_start = nullptr; // line comment start position
 	for (; c != end; c++) {
 		if (!(std::isalnum(*c) || *c == '_')) {
 			if (std::isblank(*c) || *c == ';') {
@@ -123,60 +78,50 @@ inline Util::BoolRes Assembler::parseDirective(const char *line, size_t len) {
 				}
 				break;
 			}
-			return Util::BoolRes(false, std::string("could not parse directive: illegal character '") + *c + "'");
+			return std::make_pair(false, std::string("could not parse directive: illegal character '") + *c + "'");
 		}
 	}
-    for (auto i = line + 1; i < line + len; ++i) {
-      if (*i == ';') {
-        comment_start = i;
-        break;
-      }
-    }
-    // here c is the end position of directive name
 	name.assign(&line[1], c);
-    
 	if (name.empty()) {
-		return Util::BoolRes(false, "could not parse directive");
+		return std::make_pair(false, "could not parse directive");
 	}
-    auto line_comment = get_line_comment_from_asm_line_code(line, len);
-    int linenumber = get_linenumber_from_asm_line_comment(line_comment);
 
 	Util::lower(name);
 	if (name == "upvalues") {
 		if (bUpvalues_) {
-			return Util::BoolRes(false, "already declared amount of upvalues");
+			return std::make_pair(false, "already declared amount of upvalues");
 		}
 		if ((c = parseInt(nUpvalues_, c, end)) == nullptr) {
-			return Util::BoolRes(false, "invalid args for directive .upvalues");
+			return std::make_pair(false, "invalid args for directive .upvalues");
 		}
 		bUpvalues_ = true;
 	} else if (name == "func") {
 		if (parseStatus_ != PARSE_FUNC && parseStatus_ != PARSE_NONE) {
-			return Util::BoolRes(false, "func declaration cannot be inside a code or const segment");
+			return std::make_pair(false, "func declaration cannot be inside a code or const segment");
 		}
 
 		if (!instructions_.empty()) {
 			auto res = finalizeFunction();
-			if (!res.success()) {
+			if (!res.first) {
 				return res;
 			}
 		}
 
 		if ((c = parseLabel(funcname_, c, end)) == nullptr) {
-			return Util::BoolRes(false, "invalid args for directive .func");
+			return std::make_pair(false, "invalid args for directive .func");
 		}
 
 		if ((c = parseInt(f_maxstacksize_, c, end)) == nullptr) {
-			return Util::BoolRes(false, "invalid args for directive .func");
+			return std::make_pair(false, "invalid args for directive .func");
 		}
 		if ((c = parseInt(f_params_, c, end)) == nullptr) {
-			return Util::BoolRes(false, "invalid args for directive .func");
+			return std::make_pair(false, "invalid args for directive .func");
 		}
 		if ((c = parseInt(f_vararg_, c, end)) == nullptr) {
-			return Util::BoolRes(false, "invalid args for directive .func");
+			return std::make_pair(false, "invalid args for directive .func");
 		}
 		if (f_vararg_ > 2) {
-			return Util::BoolRes(false, "vararg cannot be greater than 2");
+			return std::make_pair(false, "vararg cannot be greater than 2");
 		}
 
 		funcid_++;
@@ -184,43 +129,43 @@ inline Util::BoolRes Assembler::parseDirective(const char *line, size_t len) {
 
 	} else if (name == "begin_const") {
 		if (parseStatus_ != PARSE_FUNC) {
-			return Util::BoolRes(false, "const declaration must be inside function");
+			return std::make_pair(false, "const declaration must be inside function");
 		}
 
 		parseStatus_ = PARSE_CONST;
 	} else if (name == "end_const") {
 		if (parseStatus_ != PARSE_CONST) {
-			return Util::BoolRes(false, "end_const must be inside const segment");
+			return std::make_pair(false, "end_const must be inside const segment");
 		}
 
 		parseStatus_ = PARSE_FUNC;
 	} else if (name == "begin_code") {
 		if (parseStatus_ != PARSE_FUNC) {
-			return Util::BoolRes(false, "code declaration must be inside function");
+			return std::make_pair(false, "code declaration must be inside function");
 		}
 
 		parseStatus_ = PARSE_CODE;
 	} else if (name == "end_code") {
 		if (parseStatus_ != PARSE_CODE) {
-			return Util::BoolRes(false, "end_code must be inside code segment");
+			return std::make_pair(false, "end_code must be inside code segment");
 		}
 
 		parseStatus_ = PARSE_FUNC;
 	} else if (name == "begin_upvalue") {
 		if (parseStatus_ != PARSE_FUNC) {
-			return Util::BoolRes(false, "upvalue declaration must be inside function");
+			return std::make_pair(false, "upvalue declaration must be inside function");
 		}
 
 		parseStatus_ = PARSE_UPVALUE;
 	} else if (name == "end_upvalue") {
 		if (parseStatus_ != PARSE_UPVALUE) {
-			return Util::BoolRes(false, "end_upvalue must be inside upvalue segment");
+			return std::make_pair(false, "end_upvalue must be inside upvalue segment");
 		}
 
 		parseStatus_ = PARSE_FUNC;
 	}
 
-	return Util::BoolRes(true, "");
+	return std::make_pair(true, "");
 }
 
 const char *Assembler::parseConstant(const char *start, const char *end, size_t *id) {
@@ -681,22 +626,15 @@ const OpInfo opinfo[NUM_OPCODES][3] = { // Maximum of 3 operands
 	{{OPP_Ax, LIMIT_EMBED}} // EXTRAARG
 };
 
-inline Util::BoolRes Assembler::parseCode(const char *line, size_t len) {
+inline std::pair<bool, std::string> Assembler::parseCode(const char *line, size_t len) {
 	const char *c = line;
 	const char *end = line + len;
 
 	std::string opcodestr;
 	const char *bend = parseLabel(opcodestr, c, end);
 	if (bend == nullptr) {
-		return Util::BoolRes(false, "invalid opcode");
+		return std::make_pair(false, "invalid opcode");
 	}
-
-    auto line_comment = get_line_comment_from_asm_line_code(line, len);
-    auto linenumber = get_linenumber_from_asm_line_comment(line_comment);
-    if (linenumber >= 0)
-    {
-      lineinfos_.push_back(linenumber);
-    }
 
 	if (bend != end && *bend == ':') { // location
 		locations_[opcodestr] = instructions_.size();
@@ -716,7 +654,7 @@ inline Util::BoolRes Assembler::parseCode(const char *line, size_t len) {
 			}
 		}
 
-		return Util::BoolRes(true, "");
+		return std::make_pair(true, "");
 	}
 	Util::lower(opcodestr);
 
@@ -732,7 +670,7 @@ inline Util::BoolRes Assembler::parseCode(const char *line, size_t len) {
 		}
 	}
 	if (i == NUM_OPCODES) {
-		return Util::BoolRes(false, "invalid opcode");
+		return std::make_pair(false, "invalid opcode");
 	}
 
 	Instruction ins = 0;
@@ -746,7 +684,7 @@ inline Util::BoolRes Assembler::parseCode(const char *line, size_t len) {
 	for (int i = 0; i < count; i++) {
 		Operand op;
 		if ((bend = parseOperand(op, bend, end, info[i].limit)) == nullptr) {
-			return Util::BoolRes(false, "invalid operand(s)");
+			return std::make_pair(false, "invalid operand(s)");
 		}
 
 		switch (info[i].position) {
@@ -786,7 +724,7 @@ inline Util::BoolRes Assembler::parseCode(const char *line, size_t len) {
 
 	bend = std::find_if_not(bend, end, std::ptr_fun<int, int>(std::isblank));
 	if (bend != end && *bend != ';') {
-		return Util::BoolRes(false, "too many operands in instruction");
+		return std::make_pair(false, "too many operands in instruction");
 	}
 
 	instructions_.push_back(ins);
@@ -798,32 +736,32 @@ inline Util::BoolRes Assembler::parseCode(const char *line, size_t len) {
 		instructions_.push_back(extended);
 	}
 
-	return Util::BoolRes(true, "");
+	return std::make_pair(true, "");
 }
 
-inline Util::BoolRes Assembler::parseUpvalue(const char *line, size_t len) {
+inline std::pair<bool, std::string> Assembler::parseUpvalue(const char *line, size_t len) {
 	const char *end = line + len;
 	const char *c = line;
 	unsigned char instack, idx;
 
 	if ((c = parseInt(instack, c, end)) == nullptr) {
-		return Util::BoolRes(false, "could not parse instack");
+		return std::make_pair(false, "could not parse instack");
 	}
 	if ((c = parseInt(idx, c, end)) == nullptr) {
-		return Util::BoolRes(false, "could not parse idx");
+		return std::make_pair(false, "could not parse idx");
 	}
 
 	c = std::find_if_not(c, end, std::ptr_fun<int, int>(std::isblank));
 	if (c != end && *c != ';') {
-		return Util::BoolRes(false, "invalid upvalue");
+		return std::make_pair(false, "invalid upvalue");
 	}
 
 	upvalues_.push_back(Upvalue{instack, idx, ""});
 
-	return Util::BoolRes(true, "");
+	return std::make_pair(true, "");
 }
 
-Util::BoolRes Assembler::parseLine(const char *line, size_t len) {
+std::pair<bool, std::string> Assembler::parseLine(const char *line, size_t len) {
 	if (line[0] == '.') { // directive
 		return parseDirective(line, len);
 	}
@@ -831,25 +769,25 @@ Util::BoolRes Assembler::parseLine(const char *line, size_t len) {
 	switch(parseStatus_) {
 		case PARSE_CONST:
 			if (parseConstant(line, line + len, nullptr) == nullptr) {
-				return Util::BoolRes(false, "could not parse constant");
+				return std::make_pair(false, "could not parse constant");
 			}
-			return Util::BoolRes(true, "");
+			return std::make_pair(true, "");
 		case PARSE_CODE:
 			return parseCode(line, len);
 		case PARSE_UPVALUE:
 			return parseUpvalue(line, len);
 		default:
-			return Util::BoolRes(false, "unimplemented");
+			return std::make_pair(false, "unimplemented");
 	}
 }
 
-Util::BoolRes Assembler::finalizeFunction() {
+std::pair<bool, std::string> Assembler::finalizeFunction() {
 	if (!neededLocations_.empty()) {
 		std::string locList = std::string("undeclared locations: ") + neededLocations_[0].first;
 		for (int i = 1; i < neededLocations_.size(); i++) {
 			locList += ", " + neededLocations_[i].first;
 		}
-		return Util::BoolRes(false, locList);
+		return std::make_pair(false, locList);
 	}
 
 	ParsedFunctionPtr func(new ParsedFunction);
@@ -863,78 +801,75 @@ Util::BoolRes Assembler::finalizeFunction() {
 	func->params = f_params_;
 	func->vararg = f_vararg_;
 
-    func->lineinfos = lineinfos_;
-    lineinfos_.clear();
-
 	functions_[func->name] = func;
 
-	return Util::BoolRes(true, "");
+	return std::make_pair(true, "");
 }
 
-#define WRITE_ASSERT(f, msg) if (!f) return Util::BoolRes(false, msg);
+#define WRITE_ASSERT(f, msg) if (!f) return std::make_pair(false, msg);
 
-inline Util::BoolRes Assembler::writeHeader() {
+inline std::pair<bool, std::string> Assembler::writeHeader() {
 	if (wbuffer_->writeBytes(LUA_SIGNATURE, sizeof(LUA_SIGNATURE)-1) != sizeof(LUA_SIGNATURE)-1) {
-		return Util::BoolRes(false, "failed to write signature");
+		return std::make_pair(false, "failed to write signature");
 	}
-	WRITE_ASSERT(wbuffer_->write<unsigned char>(LUAC_VERSION).success(), "failed to write version");
-	WRITE_ASSERT(wbuffer_->write<unsigned char>(LUAC_FORMAT).success(), "failed to write format");
+	WRITE_ASSERT(wbuffer_->write<unsigned char>(LUAC_VERSION).first, "failed to write version");
+	WRITE_ASSERT(wbuffer_->write<unsigned char>(LUAC_FORMAT).first, "failed to write format");
 	if (wbuffer_->writeBytes(LUAC_DATA, sizeof(LUAC_DATA)-1) != sizeof(LUAC_DATA)-1) {
-		return Util::BoolRes(false, "failed to write LUAC_DATA");
+		return std::make_pair(false, "failed to write LUAC_DATA");
 	}
-	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(int)).success(), "failed to write int size");
-	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(LUA_SIZE_T_TYPE)).success(), "failed to write size_t size");
-	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(Instruction)).success(), "failed to write instruction size");
-	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(lua_Integer)).success(), "failed to write integer size");
-	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(lua_Number)).success(), "failed to write number size");
-	WRITE_ASSERT(wbuffer_->write<lua_Integer>(LUAC_INT).success(), "failed to write LUAC_INT");
-	WRITE_ASSERT(wbuffer_->write<lua_Number>(LUAC_NUM).success(), "failed to write LUAC_NUM");
+	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(int)).first, "failed to write int size");
+	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(size_t)).first, "failed to write size_t size");
+	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(Instruction)).first, "failed to write instruction size");
+	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(lua_Integer)).first, "failed to write integer size");
+	WRITE_ASSERT(wbuffer_->write<unsigned char>(sizeof(lua_Number)).first, "failed to write number size");
+	WRITE_ASSERT(wbuffer_->write<lua_Integer>(LUAC_INT).first, "failed to write LUAC_INT");
+	WRITE_ASSERT(wbuffer_->write<lua_Number>(LUAC_NUM).first, "failed to write LUAC_NUM");
 
-	return Util::BoolRes(true, "");
+	return std::make_pair(true, "");
 }
 
 
-Util::BoolRes Assembler::writeString(const std::string &string) {
+std::pair<bool, std::string> Assembler::writeString(const std::string &string) {
 	size_t len = string.size();
-	Util::BoolRes res;
+	std::pair<bool, std::string> res;
 	if (len < 0xFE) {
 		res = wbuffer_->write<unsigned char>(len + 1);
 	} else {
 		res = wbuffer_->write<unsigned char>(0xFF);
-		if (!res.success()) {
+		if (!res.first) {
 			return res;
 		}
 		res = wbuffer_->write(len + 1);
 	}
-	if (!res.success()) {
+	if (!res.first) {
 		return res;
 	}
 
 	if (wbuffer_->writeBytes(string.c_str(), len) != len) {
-		return Util::BoolRes(false, "could not write string");
+		return std::make_pair(false, "could not write string");
 	}
-	return Util::BoolRes(true, "");
+	return std::make_pair(true, "");
 }
 
-Util::BoolRes Assembler::writeFunction(ParsedFunctionPtr function) {
+std::pair<bool, std::string> Assembler::writeFunction(ParsedFunctionPtr function) {
 	auto res = writeString(function->name);
-	if (!res.success()) {
+	if (!res.first) {
 		return res;
 	}
 
-	if (!(res = wbuffer_->write<int>(0)).success()) { // linedefined (unimplemented)
+	if (!(res = wbuffer_->write<int>(0)).first) { // linedefined (unimplemented)
 		return res;
 	}
-	if (!(res = wbuffer_->write<int>(0)).success()) { // lastlinedefined (unimplemented)
+	if (!(res = wbuffer_->write<int>(0)).first) { // lastlinedefined (unimplemented)
 		return res;
 	}
-	if (!(res = wbuffer_->write(function->params)).success()) { // numparams
+	if (!(res = wbuffer_->write(function->params)).first) { // numparams
 		return res;
 	}
-	if (!(res = wbuffer_->write(function->vararg)).success()) { // is_vararg
+	if (!(res = wbuffer_->write(function->vararg)).first) { // is_vararg
 		return res;
 	}
-	if (!(res = wbuffer_->write(function->maxstacksize)).success()) { // maxstacksize
+	if (!(res = wbuffer_->write(function->maxstacksize)).first) { // maxstacksize
 		return res;
 	}
 
@@ -945,7 +880,7 @@ Util::BoolRes Assembler::writeFunction(ParsedFunctionPtr function) {
 		std::string pName = function->usedSubroutines[i];
 		auto sub = functions_.find(pName);
 		if (sub == functions_.end()) {
-			return Util::BoolRes(false, std::string("no such function: ") + pName);
+			return std::make_pair(false, std::string("no such function: ") + pName);
 		}
 
 		protos.push_back(sub->second);
@@ -953,7 +888,7 @@ Util::BoolRes Assembler::writeFunction(ParsedFunctionPtr function) {
 		for (auto it = function->neededSubroutines.begin(); it != function->neededSubroutines.end();) {
 			if (it->first == pName) {
 				SETARG_Bx(function->instructions[it->second], i);
-				it = function->neededSubroutines.erase(it);
+				function->neededSubroutines.erase(it);
 			} else {
 				it++;
 			}
@@ -961,37 +896,37 @@ Util::BoolRes Assembler::writeFunction(ParsedFunctionPtr function) {
 	}
 
 
-	if (!(res = wbuffer_->write<int>(function->instructions.size())).success()) { // code length	
+	if (!(res = wbuffer_->write<int>(function->instructions.size())).first) { // code length	
 		return res;
 	}
 	if (wbuffer_->writeBytes((const char*)function->instructions.data(), function->instructions.size() * sizeof(Instruction))  != function->instructions.size() * sizeof(Instruction)) { // code
-		return Util::BoolRes(false, "failed to write instructions");
+		return std::make_pair(false, "failed to write instructions");
 	}
 
 
-	if (!(res = wbuffer_->write<int>(function->constants.size())).success()) { // constants length	
+	if (!(res = wbuffer_->write<int>(function->constants.size())).first) { // constants length	
 		return res;
 	}
 
 	for (TValuePtr constant : function->constants) {
-		if (!(res = wbuffer_->write<unsigned char>(constant->type())).success()) { // constant type
+		if (!(res = wbuffer_->write<unsigned char>(constant->type())).first) { // constant type
 			return res;
 		}
 		switch (constant->type()) {
 			case LUA_TSTRING: {
-				if (!(res = writeString(reinterpret_cast<TString*>(constant.get())->string())).success()) {
+				if (!(res = writeString(reinterpret_cast<TString*>(constant.get())->string())).first) {
 					return res;
 				}
 				break;
 			}
 			case LUA_TNUMBER: {
-				if (!(res = wbuffer_->write(reinterpret_cast<TNumber*>(constant.get())->number())).success()) {
+				if (!(res = wbuffer_->write(reinterpret_cast<TNumber*>(constant.get())->number())).first) {
 					return res;
 				}
 				break;
 			}
 			case LUA_TBOOLEAN: {
-				if (!(res = wbuffer_->write(reinterpret_cast<TBool*>(constant.get())->value())).success()) {
+				if (!(res = wbuffer_->write(reinterpret_cast<TBool*>(constant.get())->value())).first) {
 					return res;
 				}
 				break;
@@ -999,60 +934,53 @@ Util::BoolRes Assembler::writeFunction(ParsedFunctionPtr function) {
 		}
 	}
 
-	if (!(res = wbuffer_->write<int>(function->upvalues.size())).success()) { // upvalues length	
+	if (!(res = wbuffer_->write<int>(function->upvalues.size())).first) { // upvalues length	
 		return res;
 	}
 
 	for (Upvalue upvalue : function->upvalues) {
-		if (!(res = wbuffer_->write(upvalue.instack)).success()) { // instack
+		if (!(res = wbuffer_->write(upvalue.instack)).first) { // instack
 			return res;
 		}
-		if (!(res = wbuffer_->write(upvalue.idx)).success()) { // idx
+		if (!(res = wbuffer_->write(upvalue.idx)).first) { // idx
 			return res;
 		}
 	}
 
-	if (!(res = wbuffer_->write<int>(protos.size())).success()) { // protos length	
+	if (!(res = wbuffer_->write<int>(protos.size())).first) { // protos length	
 		return res;
 	}
 	for (ParsedFunctionPtr proto : protos) {
-		if (!(res = writeFunction(proto)).success()) {
+		if (!(res = writeFunction(proto)).first) {
 			return res;
 		}
 	}
 
-    // dumpSizeLineinfos and dumpVector(lineinfos)
-	if (!(res = wbuffer_->write<int>(function->lineinfos.size())).success()) { // line info size
+	if (!(res = wbuffer_->write<int>(0)).first) { // line info size (unimplemented)
 		return res;
 	}
-    // dumpVector(lineinfos)
-    if (function->lineinfos.size() > 0)
-    {
-        wbuffer_->writeBytes((const char *)function->lineinfos.data(), function->lineinfos.size() * sizeof(function->lineinfos[0]));
-    }
-
-	if (!(res = wbuffer_->write<int>(0)).success()) { // local var size (unimplemented)
+	if (!(res = wbuffer_->write<int>(0)).first) { // local var size (unimplemented)
 		return res;
 	}
-	if (!(res = wbuffer_->write<int>(0)).success()) { // upvalue name size (unimplemented)
+	if (!(res = wbuffer_->write<int>(0)).first) { // upvalue name size (unimplemented)
 		return res;
 	}
 
-	return Util::BoolRes(true, "");
+	return std::make_pair(true, "");
 }
 
 
-Util::BoolRes Assembler::assemble() {
+std::pair<bool, std::string> Assembler::assemble() {
 	if (!rbuffer_) {
-		return Util::BoolRes(false, "invalid read buffer");
+		return std::make_pair(false, "invalid read buffer");
 	}
 	if (!wbuffer_) {
-		return Util::BoolRes(false, "invalid write buffer");
+		return std::make_pair(false, "invalid write buffer");
 	}
 
 	std::string line;
 	unsigned int linen = 0;
-	while (rbuffer_->readLine(line).success()) {
+	while (rbuffer_->readLine(line).first) {
 		linen++;
 
 		Util::trim(line);
@@ -1061,35 +989,35 @@ Util::BoolRes Assembler::assemble() {
 		}
 
 		auto res = parseLine(line.c_str(), line.length());
-		if (!res.success()) {
-			return Util::BoolRes(false, std::string("error parsing line ") + std::to_string(linen) + ": " + res.error_msg());
+		if (!res.first) {
+			return std::make_pair(false, std::string("error parsing line ") + std::to_string(linen) + ": " + res.second);
 		}
 	}
 
 	if (!instructions_.empty()) {
 		auto res = finalizeFunction();
-		if (!res.success()) {
+		if (!res.first) {
 			return res;
 		}
 	}
 
 	if (!bUpvalues_) {
-		return Util::BoolRes(false, "amount of upvalues never declared");
+		return std::make_pair(false, "amount of upvalues never declared");
 	}
 
 	auto  res = writeHeader();
-	if (!res.success()) {
+	if (!res.first) {
 		return res;
 	}
 
-	WRITE_ASSERT(wbuffer_->write<unsigned char>(nUpvalues_).success(), "failed to write num upvalues");
+	WRITE_ASSERT(wbuffer_->write<unsigned char>(nUpvalues_).first, "failed to write num upvalues");
 
 	auto it = functions_.find("main");
 	if (it == functions_.end()) {
-		return Util::BoolRes(false, "no main function");
+		return std::make_pair(false, "no main function");
 	}
 
 	return writeFunction(it->second);
 
-	// return Util::BoolRes(true, "");
+	// return std::make_pair(true, "");
 }

@@ -1,17 +1,16 @@
-﻿#ifndef PARSER_H
+#ifndef PARSER_H
 #define PARSER_H
 
 #include "Buffer.h"
 #include "lconfig.h"
 #include <utility>
 #include <cstring>
-#include <vector>
 
 class Parser {
 public:
 	Parser(Buffer *buffer);
 
-	Util::BoolRes parse(std::string &out);
+	std::pair<bool, std::string> parse(std::string &out);
 	inline std::string label() {
 		if (labels_++ == 0) {
 			return "main";
@@ -20,22 +19,21 @@ public:
 	}
 
 private:
-	Util::BoolRes parseHeader();
+	std::pair<bool, std::string> parseHeader();
 
 	bool checkLiteral(const char *literal) {
 		size_t len = std::strlen(literal);
-        std::vector<char> bytes;
-        bytes.resize(len);
-		if (buffer_->read(bytes.data(), len) != len) {
+		char bytes[len];
+		if (buffer_->read(bytes, len) != len) {
 			return false;
 		}
 
-		return std::memcmp(bytes.data(), literal, len) == 0;
+		return std::memcmp(bytes, literal, len) == 0;
 	}
 
 	inline bool checkByte(unsigned char byte) {
 		unsigned char b;
-		return buffer_->read(b).success() && byte == b;
+		return buffer_->read(b).first && byte == b;
 	}
 
 	inline bool checkInteger(lua_Integer n) {
@@ -52,7 +50,7 @@ private:
 
 	unsigned int labels_;
 
-	Util::BoolRes loadString(std::string &out);
+	std::pair<bool, std::string> loadString(std::string &out);
 
 	BufferPtr buffer_;
 };

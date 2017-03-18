@@ -1,4 +1,4 @@
-﻿#include "InstructionParser.h"
+#include "InstructionParser.h"
 #include "opcodes.h"
 #include "Function.h"
 
@@ -16,7 +16,7 @@ InstructionParser::InstructionParser(Function *function, std::vector<Instruction
 
 }
 
-Util::BoolRes InstructionParser::parse() {
+std::pair<bool, std::string> InstructionParser::parse() {
 	std::stringstream opout;
 
 	std::vector<std::string> lines;
@@ -48,7 +48,7 @@ Util::BoolRes InstructionParser::parse() {
 			case OP_LOADKX:
 				opout << " %" << a;
 				if (GET_OPCODE(*it++) != OP_EXTRAARG) {
-					return Util::BoolRes(false, "OP_LOADKK needs to be proceded by an OP_EXTRAARG");
+					return std::make_pair(false, "OP_LOADKK needs to be proceded by an OP_EXTRAARG");
 				}
 				opout << " const " << function_->constant(INDEXK(GETARG_Ax(*it)))->str();
 
@@ -639,7 +639,7 @@ Util::BoolRes InstructionParser::parse() {
 
 				if (GETARG_C(*it) == 0) {
 					if (GET_OPCODE(*it++) != OP_EXTRAARG) {
-						return Util::BoolRes(false, "OP_SETLIST C=0 needs to be proceded by an OP_EXTRAARG");
+						return std::make_pair(false, "OP_SETLIST C=0 needs to be proceded by an OP_EXTRAARG");
 					}
 					opout << " " << GETARG_Ax(*it);
 				} else {
@@ -677,7 +677,7 @@ Util::BoolRes InstructionParser::parse() {
 				break;
 			}
 			case OP_EXTRAARG: {
-				return Util::BoolRes(false, "OP_EXTRAARG is not a valid opcode");
+				return std::make_pair(false, "OP_EXTRAARG is not a valid opcode");
 				break;
 			}
 		}
@@ -704,5 +704,5 @@ Util::BoolRes InstructionParser::parse() {
 		decomp_ << "\n";
 	}
 
-	return Util::BoolRes(true, "");
+	return std::make_pair(true, "");
 }
