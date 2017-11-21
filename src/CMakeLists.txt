@@ -1,5 +1,9 @@
-cmake_minimum_required(VERSION 2.4)
+cmake_minimum_required(VERSION 3.1)
 project(luadisass)
+
+
+set(CMAKE_CXX_STANDARD 11)
+
 
 set(SOURCES
 	main.cpp
