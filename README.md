@@ -35,5 +35,4 @@ luadisass -a disass.luas bytecode.luac
 
 Notes
 -----
-* don't look at the code unless you hate yourself
-* don't look at Assembler.cpp unless you really hate yourself
+* Much of the code (especially Assembler.cpp) was quickly hacked together.
